@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FT-817/818 CAT Control</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2346c8a6'/%3E%3Cpath d='M7 22l5-12 4 8 3-5 6 9' stroke='%23201508' stroke-width='3' fill='none' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="panel.css">
+</head>
+<body data-lcd="green">
+
+<header class="topbar">
+  <div class="brand"><strong>FT-817/818</strong><span>CAT CONTROL</span><em>clean-room</em></div>
+  <button id="connPill" class="pill"><i class="dot"></i><span id="connText" data-i18n="disconnected">Disconnected</span></button>
+  <div id="modelBadge" class="badge">--</div>
+  <div class="grow"></div>
+  <div class="utc"><span>UTC</span><b id="utc">--:--:--</b></div>
+  <label class="mini" title="LCD colour"><select id="lcdColor">
+    <option value="green" data-i18n="green">Green</option>
+    <option value="amber" data-i18n="amber">Amber</option>
+    <option value="blue" data-i18n="blue">Blue</option>
+    <option value="white" data-i18n="white">White</option>
+    <option value="night" data-i18n="night">Night</option>
+  </select></label>
+  <label class="mini" title="Language"><select id="langSel">
+    <option value="it">IT</option><option value="en" selected>EN</option><option value="es">ES</option>
+    <option value="fr">FR</option><option value="ja">JA</option><option value="ru">RU</option>
+  </select></label>
+  <button id="btnSettings" class="btn ghost" data-i18n="settings">Settings</button>
+  <button id="btnQuit" class="btn ghost" data-i18n="quit">Quit</button>
+</header>
+
+<main class="layout">
+
+  <section class="col left">
+    <div class="lcd" id="lcd">
+      <div class="lcd-icons">
+        <i data-ic="vfoa">VFO-A</i><i data-ic="vfob">VFO-B</i><i data-ic="split">SPLIT</i>
+        <i data-ic="clar">CLAR</i><i data-ic="lock">LOCK</i><i data-ic="ipo">IPO</i>
+        <i data-ic="att">ATT</i><i data-ic="nb">NB</i><i data-ic="agc">AGC</i>
+        <i data-ic="ant">REAR</i><i data-ic="tone">TONE</i><i data-ic="shift">SHIFT</i>
+        <span id="lcdTag" class="lcd-tag"></span>
+        <i data-ic="busy">BUSY</i><i data-ic="tx">TX</i>
+      </div>
+      <div class="lcd-main">
+        <div class="lcd-side"><div id="lcdMode" class="lcd-mode">---</div><div id="lcdBand" class="lcd-band"></div></div>
+        <div id="freq" class="freq">14.060.00</div>
+        <div id="entry" class="entry" hidden><input id="entryInput" inputmode="decimal" autocomplete="off" placeholder="kHz / MHz"></div>
+      </div>
+      <div class="meter" id="meter">
+        <div class="meter-label" id="meterLabel">S</div>
+        <div class="meter-track"><div class="meter-scale" id="meterScale"></div><div class="meter-fill" id="meterFill"></div></div>
+        <div class="meter-read" id="meterRead">S0</div>
+      </div>
+      <div id="lcdSub" class="lcd-sub">&nbsp;</div>
+      <div id="lcdMsg" class="lcd-msg" hidden></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title" data-i18n="tuning">Tuning</div>
+      <div class="tune-row">
+        <button id="btnDown" class="btn step">−</button>
+        <button id="btnStep" class="btn step wide"><span id="stepText">10 Hz</span></button>
+        <button id="btnUp" class="btn step">+</button>
+      </div>
+      <div class="tune-row smallrow">
+        <button class="btn tiny" id="digit1">100k</button><button class="btn tiny" id="digit2">10k</button>
+        <button class="btn tiny" id="digit3">1k</button><button class="btn tiny" id="digit4">100</button>
+        <button class="btn tiny" id="digit5">10</button>
+      </div>
+      <div class="mode-row" id="modeRow"></div>
+      <div class="band-grid" id="bandGrid"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title" data-i18n="memoryShortcuts">Memory shortcuts</div>
+      <div id="quickMems" class="quick-mems"></div>
+    </div>
+  </section>
+
+  <section class="col middle">
+    <div class="panel knob-panel">
+      <div class="panel-title" data-i18n="knob">Main dial</div>
+      <div id="knob" class="knob" tabindex="0"><div class="knob-mark"></div><div class="knob-cap"></div></div>
+      <div class="knob-read"><span id="knobStep">10 Hz</span><span id="knobHint" data-i18n="dragHint">drag / wheel</span></div>
+      <div class="knob-buttons">
+        <button id="btnVfo" class="btn" data-i18n="vfo">VFO A/B</button>
+        <button id="btnAeqB" class="btn" data-i18n="aEqB">A=B</button>
+        <button id="btnSwap" class="btn" data-i18n="swap">A↔B</button>
+      </div>
+      <div class="knob-buttons">
+        <button id="btnSplit" class="btn toggle" data-i18n="split">Split</button>
+        <button id="btnLock" class="btn toggle" data-i18n="lock">Lock</button>
+        <button id="btnClar" class="btn toggle" data-i18n="clar">Clar</button>
+        <button id="btnTone" class="btn toggle" data-i18n="tone">Tone</button>
+      </div>
+      <div class="clar-row">
+        <button class="btn tiny" id="clarDown">−</button>
+        <input id="clarVal" class="num" value="0" inputmode="numeric">
+        <button class="btn tiny" id="clarUp">+</button>
+        <span class="muted">Hz</span>
+      </div>
+      <div class="split-row">
+        <select id="rptSel"><option value="S">Simplex</option><option value="-">− shift</option><option value="+">+ shift</option></select>
+        <select id="rptOff"><option value="600000">600 kHz</option><option value="1600000">1.6 MHz</option><option value="5000000">5 MHz</option><option value="7600000">7.6 MHz</option></select>
+      </div>
+      <button id="btnApplyRpt" class="btn small" data-i18n="apply">Apply</button>
+    </div>
+
+    <div class="panel ptt-panel">
+      <button id="ptt" class="ptt" data-i18n="pttHold">PTT</button>
+      <div class="ptt-row">
+        <button id="pttLatch" class="btn toggle" data-i18n="latch">Latch</button>
+        <button id="tune" class="btn warning" data-i18n="tuneHold">TUNE</button>
+        <button id="btnPower" class="btn" data-i18n="power">Power</button>
+      </div>
+      <div id="pttInfo" class="muted small"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title"><span data-i18n="radio">Radio</span><button id="btnRefreshEe" class="link" data-i18n="refresh">refresh</button></div>
+      <div id="eeQuick" class="ee-grid"></div>
+    </div>
+  </section>
+
+  <section class="col right">
+    <nav class="tabs">
+      <button class="tab active" data-tab="operate" data-i18n="operate">Operate</button>
+      <button class="tab" data-tab="scope" data-i18n="scope">Scope</button>
+      <button class="tab" data-tab="memories" data-i18n="memories">Memories</button>
+      <button class="tab" data-tab="cw" data-i18n="cw">CW</button>
+      <button class="tab" data-tab="console" data-i18n="console">Console</button>
+    </nav>
+
+    <div class="tabpage active" data-page="operate">
+      <div class="panel fill">
+        <div class="panel-title" data-i18n="status">Status</div>
+        <dl class="kv">
+          <dt data-i18n="frequency">Frequency</dt><dd id="stFreq">--</dd>
+          <dt data-i18n="mode">Mode</dt><dd id="stMode">--</dd>
+          <dt data-i18n="band">Band</dt><dd id="stBand">--</dd>
+          <dt data-i18n="smeter">S-meter</dt><dd id="stS">--</dd>
+          <dt data-i18n="txmeter">TX meter</dt><dd id="stTx">--</dd>
+          <dt data-i18n="eeprom">EEPROM</dt><dd id="stEe">--</dd>
+          <dt data-i18n="rate">Poll rate</dt><dd id="stRate">--</dd>
+        </dl>
+        <div class="panel-title" data-i18n="eepromSettings">EEPROM settings</div>
+        <div id="eeFull" class="ee-grid"></div>
+        <div class="panel-title" data-i18n="toneSettings">CTCSS / DCS</div>
+        <div class="tone-row">
+          <select id="toneMode"><option>OFF</option><option>CTCSS</option><option>CTCSS-ENC</option><option>DCS</option></select>
+          <select id="toneVal"></select>
+          <button id="btnToneApply" class="btn small" data-i18n="apply">Apply</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tabpage" data-page="scope">
+      <div class="panel fill">
+        <div class="panel-title"><span data-i18n="panorama">Panorama</span><span id="scopeInfo" class="muted small"></span></div>
+        <canvas id="scopeCanvas" width="640" height="220"></canvas>
+        <div class="row">
+          <label><span data-i18n="span">Span</span><select id="scopeSpan"><option>5</option><option>10</option><option>25</option><option>50</option><option>100</option><option>250</option></select></label>
+          <label><span data-i18n="points">Points</span><select id="scopePts"><option>41</option><option selected>61</option><option>101</option></select></label>
+          <button id="scopeStart" class="btn" data-i18n="start">Start</button>
+          <button id="scopeStop" class="btn ghost" data-i18n="stop">Stop</button>
+        </div>
+        <div class="panel-title"><span data-i18n="swr">SWR sweep</span><span id="swrInfo" class="muted small"></span></div>
+        <canvas id="swrCanvas" width="640" height="200"></canvas>
+        <div class="row">
+          <label><span data-i18n="span">Span</span><select id="swrSpan"><option>10</option><option selected>25</option><option>50</option><option>100</option><option>250</option><option value="band">Whole band</option></select></label>
+          <label><span data-i18n="points">Points</span><select id="swrPts"><option>11</option><option selected>21</option><option>41</option></select></label>
+          <button id="swrStart" class="btn warning" data-i18n="measure">Measure</button>
+          <button id="swrStop" class="btn ghost" data-i18n="stop">Stop</button>
+        </div>
+        <div id="swrText" class="muted small"></div>
+      </div>
+    </div>
+
+    <div class="tabpage" data-page="memories">
+      <div class="panel fill">
+        <div class="panel-title"><span data-i18n="memories">Memories</span><span id="memCount" class="muted small"></span></div>
+        <div class="row">
+          <input id="memSearch" placeholder="Search" class="grow">
+          <button id="memRead" class="btn" data-i18n="fromRadio">From radio</button>
+          <button id="memReadStop" class="btn ghost" data-i18n="stop">Stop</button>
+        </div>
+        <div id="memReadBar" class="progress" hidden><div id="memReadFill"></div><span id="memReadText"></span></div>
+        <div class="row">
+          <input id="memName" placeholder="Name" maxlength="12">
+          <button id="memSave" class="btn" data-i18n="saveCurrent">Save current</button>
+        </div>
+        <div class="row">
+          <button id="memExport" class="btn ghost" data-i18n="export">Export</button>
+          <button id="memImportBtn" class="btn ghost" data-i18n="import">Import</button>
+          <input type="file" id="memImportFile" accept="application/json" hidden>
+        </div>
+        <div id="memList" class="mem-list"></div>
+      </div>
+    </div>
+
+    <div class="tabpage" data-page="cw">
+      <div class="panel fill">
+        <div class="panel-title"><span data-i18n="cwKeyer">CW keyer</span><span id="cwStatus" class="muted small"></span></div>
+        <div class="row">
+          <input id="cwMyCall" placeholder="MYCALL" maxlength="12">
+          <input id="cwCall" placeholder="CALL" maxlength="12">
+          <input id="cwRst" placeholder="RST" maxlength="6" value="599">
+          <input id="cwNr" placeholder="NR" maxlength="4" value="1">
+          <input id="cwLoc" placeholder="LOC" maxlength="12">
+        </div>
+        <div class="row">
+          <label><span>WPM</span><input id="cwWpm" type="number" min="5" max="60" value="22" class="num"></label>
+          <label><span>Farnsworth</span><input id="cwFarn" type="number" min="0" max="60" value="0" class="num"></label>
+          <label><span>Ratio</span><input id="cwRatio" type="number" min="2" max="6" step="0.1" value="3" class="num"></label>
+          <label><span>Weight</span><input id="cwWeight" type="number" min="20" max="80" value="50" class="num"></label>
+          <label><span>Comp ms</span><input id="cwComp" type="number" min="-50" max="50" value="0" class="num"></label>
+        </div>
+        <div class="row">
+          <label><span data-i18n="keyLine">Key line</span><select id="cwLine"><option value="dtr">DTR</option><option value="rts">RTS</option></select></label>
+          <label><span data-i18n="keyPort">Key port</span><input id="cwPort" placeholder="(CAT port)"></label>
+          <label><span data-i18n="ptt">PTT</span><select id="cwPtt"><option value="auto">auto</option><option value="always">always</option><option value="never">never</option></select></label>
+        </div>
+        <div class="cw-mems" id="cwMems"></div>
+        <textarea id="cwText" rows="3" placeholder="CQ CQ DE {MYCALL} {MYCALL} K"></textarea>
+        <div class="row">
+          <button id="cwSend" class="btn" data-i18n="send">Send</button>
+          <button id="cwStop" class="btn ghost" data-i18n="stop">Stop</button>
+          <label class="check"><input id="cwLive" type="checkbox"> <span data-i18n="live">live typing</span></label>
+        </div>
+        <div class="cw-strip" id="cwStrip"></div>
+        <div class="panel-title" data-i18n="beacon">Beacon</div>
+        <div class="row">
+          <input id="beaconText" class="grow" maxlength="500" value="VVV VVV DE {MYCALL} {MYCALL} QTH {LOC} <AR>">
+          <label><span data-i18n="interval">Interval s</span><input id="beaconInterval" type="number" min="5" max="3600" value="60" class="num"></label>
+          <label><span data-i18n="repeat">Repeat 0=∞</span><input id="beaconRepeat" type="number" min="0" max="9999" value="0" class="num"></label>
+          <button id="beaconStart" class="btn" data-i18n="start">Start</button>
+          <button id="beaconStop" class="btn ghost" data-i18n="stop">Stop</button>
+        </div>
+        <div class="row">
+          <label class="check"><input id="monOn" type="checkbox" checked> <span data-i18n="monitor">Monitor</span></label>
+          <label><span data-i18n="pitch">Pitch</span><input id="monPitch" type="number" min="300" max="1200" value="650" class="num"></label>
+          <label><span data-i18n="volume">Volume</span><input id="monVol" type="number" min="0" max="100" value="40" class="num"></label>
+        </div>
+      </div>
+    </div>
+
+    <div class="tabpage" data-page="console">
+      <div class="panel fill">
+        <div class="panel-title"><span data-i18n="catConsole">CAT console</span><span id="catStats" class="muted small"></span></div>
+        <div class="row">
+          <input id="rawHex" placeholder="00 00 00 00 03" class="grow">
+          <button id="rawSend" class="btn" data-i18n="send">Send</button>
+        </div>
+        <div class="row">
+          <input id="eeAddr" placeholder="EEPROM address (hex)" class="num wide" value="0x7A">
+          <button id="eeRead" class="btn" data-i18n="read">Read</button>
+          <label class="check"><input id="tracePoll" type="checkbox" checked> <span data-i18n="showPolling">show polling</span></label>
+          <button id="traceClear" class="btn ghost" data-i18n="clear">Clear</button>
+        </div>
+        <div id="traceList" class="trace"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<dialog id="settingsDlg">
+  <form method="dialog" class="dlg">
+    <h2 data-i18n="connection">Connection</h2>
+    <label><span data-i18n="simulator">Simulator</span><input id="cfgSim" type="checkbox"></label>
+    <label><span data-i18n="model">Model</span><select id="cfgModel"><option value="auto">auto</option><option value="817">FT-817ND</option><option value="818">FT-818ND</option></select></label>
+    <label><span data-i18n="port">Port</span><select id="cfgPort"></select></label>
+    <label><span data-i18n="baud">Baud</span><select id="cfgBaud"><option>4800</option><option>9600</option><option>38400</option></select></label>
+    <label><span data-i18n="stopbits">Stop bits</span><select id="cfgStop"><option>2</option><option>1</option></select></label>
+    <label><span data-i18n="pttLine">PTT line</span><select id="cfgPtt"><option value="cat">CAT</option><option value="rts">RTS</option><option value="dtr">DTR</option></select></label>
+    <label><span data-i18n="poll">Poll ms</span><input id="cfgPoll" type="number" min="20" max="2000" value="100" class="num"></label>
+    <label><span data-i18n="timeout">Timeout ms</span><input id="cfgTimeout" type="number" min="50" max="3000" value="300" class="num"></label>
+    <label><span data-i18n="tot">TOT s</span><input id="cfgTot" type="number" min="1" max="600" value="180" class="num"></label>
+    <label class="check"><input id="cfgEe" type="checkbox"> <span data-i18n="eeWrite">Enable EEPROM writes</span></label>
+    <label class="check"><input id="cfgAuto" type="checkbox" checked> <span data-i18n="autoConnect">Connect automatically at startup</span></label>
+    <div class="dlg-actions">
+      <button type="button" id="cfgConnect" class="btn" data-i18n="connect">Connect</button>
+      <button type="button" id="cfgDisconnect" class="btn ghost" data-i18n="disconnect">Disconnect</button>
+      <button type="button" id="cfgClose" class="btn ghost" data-i18n="close">Close</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="toasts" class="toasts"></div>
+<script src="i18n.js"></script>
+<script src="panel.js"></script>
+</body>
+</html>
